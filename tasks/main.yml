@@ -1,0 +1,95 @@
+---
+
+  - name: Check Nginx version
+    command: nginx -v
+    register: nginx_current
+    ignore_errors: true
+    tags: [nginx]
+
+  - name: Install Nginx
+    include: install.yml
+    become: yes
+    ignore_errors: "{{ ansible_check_mode }}"
+    when: nginx_current.rc != 0
+    tags: [nginx]
+
+  - name: Upload basic config
+    template: src=etc/nginx/nginx.conf.j2 dest=/etc/nginx/nginx.conf
+    tags: [nginx]
+    notify: [reload nginx]
+
+  - name: Upload base config files
+    copy: src=nginx/{{ item }} dest=/etc/nginx/ mode=0644
+    with_items:
+    - "{{ nginx_config_files }}"
+    tags: [nginx]
+    notify: [reload nginx]
+
+  - name: Check exist dhparam.pem 
+    stat: path={{ nginx_dhparam_path }}/dhparam.pem
+    register: dhparam_exist
+    tags: [nginx]
+
+  - import_tasks: dhparam.yml
+    when: dhparam_exist.stat.exists == false
+    tags: [nginx]
+
+  - name: Upload conf files
+    copy: src={{ item }} dest=/etc/nginx/conf.d/ mode=0644
+    with_fileglob:
+    - nginx/conf/*
+    notify: [reload nginx]
+    tags: [nginx]
+
+  - name: Creating directories
+    file: path={{ item }} state=directory
+    with_items:
+    - "/etc/nginx/conf-available"
+    - "/etc/nginx/conf-enabled"
+    - "/etc/nginx/sites-available"
+    - "/etc/nginx/sites-enabled"
+    - "/etc/nginx/scripts"
+    - "/var/www"
+    tags: [nginx]
+
+  - name: Upload Nginx VHOSTS files
+    copy: src=nginx/vhosts/{{ item }} dest=/etc/nginx/sites-available/ mode=0644
+    with_items:
+    - "{{ nginx_vhosts }}"
+    notify: [reload nginx]
+    tags: [nginx, nginx-vhosts]
+
+  - name: Create symlink VHOST files
+    file:
+      src: /etc/nginx/sites-available/{{ item }}
+      dest: /etc/nginx/sites-enabled/{{ item }}
+      state: link
+    with_items:
+    - "{{ nginx_vhosts }}"
+    notify: [reload nginx]
+    ignore_errors: "{{ ansible_check_mode }}"
+    tags: [nginx, nginx-vhosts]
+
+  - name: Upload Nginx SSL files
+    copy: src=nginx/ssl/{{ item }} dest=/etc/nginx/ssl/ mode=0400
+    with_items:
+    - "{{ nginx_ssl }}"
+    notify: [reload nginx]
+    tags: [nginx, nginx-ssl]
+
+  - name: Upload awstats config
+    template: src=etc/nginx/awstats.conf.j2 dest=/etc/nginx/awstats.conf
+    when: php_fpm_version is defined
+    tags: [nginx]
+    notify: [reload nginx]
+
+  - name: Upload awstats script
+    copy: src=nginx/scripts/{{ item }} dest=/etc/nginx/scripts/
+    with_items:
+    - "{{ nginx_scripts }}"
+    notify: [reload nginx]
+    tags: [nginx]
+
+  - name: Force all notified handlers
+    meta: flush_handlers
+

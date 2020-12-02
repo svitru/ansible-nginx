@@ -1,0 +1,11 @@
+---
+
+  - name: Create dhparam path if not exist
+    file: path={{nginx_dhparam_path}} state=directory mode=0755
+    when: dhparam_exist.stat.exists == false
+
+  - name: Create dhparam.pem if not exist
+    command: openssl dhparam -out {{nginx_dhparam_path}}/dhparam.pem {{nginx_dhparam_encryption_size}}
+    args:
+      creates: "{{nginx_dhparam_path}}/dhparam.pem"
+    when: dhparam_exist.stat.exists == false

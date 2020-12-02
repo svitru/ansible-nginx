@@ -1,0 +1,23 @@
+---
+  - name: "Add nginx APT key"
+    apt_key: url={{ nginx_apt_key }} state=present
+    when: nginx_apt_key|default('none') != 'none'
+
+  - name: "Add nginx APT repositories"
+    apt_repository: repo="{{ nginx_apt_repository }}" state=present update_cache=yes
+    when: nginx_apt_repository|default('none') != 'none'
+
+  - name: "Install nginx package"
+    apt: 
+      pkg: '{{ nginx_apt_packages }}'
+      state: present
+      update_cache: yes
+
+  - name: "Start nginx on boot"
+    service: name=nginx enabled=true
+
+  - name: Disable default config
+    file: path={{ item }} state=absent
+    with_items:
+    - "{{ nginx_default_config }}"
+    notify: [reload nginx]
