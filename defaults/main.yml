@@ -1,8 +1,8 @@
 ---
 # defaults file for Nginx
 
-nginx_apt_repository: 	deb http://nginx.org/packages/mainline/{{ ansible_distribution|lower }}/ {{ ansible_distribution_release|lower }} nginx
-nginx_apt_key: 		http://nginx.org/keys/nginx_signing.key
+nginx_apt_repository: deb http://nginx.org/packages/mainline/{{ ansible_distribution|lower }}/ {{ ansible_distribution_release|lower }} nginx
+nginx_apt_key: http://nginx.org/keys/nginx_signing.key
 
 nginx_apt_packages:
   - nginx
@@ -19,6 +19,7 @@ nginx_config_files:
   - fastcgi_params.conf
   - restricted.conf
 
-nginx_vhosts: 	[default.conf]
-nginx_ssl: 	[]
-nginx_scripts: 	[]
+nginx_vhosts: [default.conf]
+nginx_ssl: []
+nginx_scripts: []
+
