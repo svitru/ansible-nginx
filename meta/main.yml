@@ -1,0 +1,27 @@
+---
+galaxy_info:
+  author: svitru
+  description: role for NGINX
+  role_name: ansible-nginx
+
+  min_ansible_version: 2.9
+
+  platforms:
+    - name: Debian
+      versions:
+        - stretch
+        - buster
+    - name: Ubuntu
+      versions:
+        - xenial
+        - bionic
+        - focal
+
+  galaxy_tags:
+    - nginx
+    - web
+    - server
+    - development
+    - install
+
+dependencies: []
